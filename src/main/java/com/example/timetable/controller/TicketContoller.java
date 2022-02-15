@@ -1,19 +1,21 @@
 package com.example.timetable.controller;
 
-import com.example.timetable.dto.TicketDto;
-import com.example.timetable.entity.Ticket;
+import com.example.timetable.dto.BuyRequestDto;
+import com.example.timetable.entity.TicketEntity;
 import com.example.timetable.service.ticket.TicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
-@RequestMapping("/passengers")
+@RequestMapping("/api/v1/tickets")
 @RequiredArgsConstructor
 public class TicketContoller {
-    private final TicketService passengerService;
+    private final TicketService ticketService;
 
-    @PostMapping("/buy")
-    public Ticket buyTicket(@RequestBody TicketDto ticketDto) {
-        return passengerService.buyTicket(ticketDto.toTicket(), ticketDto.getStation());
+    @PostMapping
+    public TicketEntity buyTicket(@RequestBody @Valid BuyRequestDto buyRequestDto) {
+        return ticketService.buyTicket(buyRequestDto);
     }
 }

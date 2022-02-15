@@ -6,29 +6,30 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.Date;
 
-@Data
 @Entity
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TimeTableRelation {
+@Table(name = "ticket")
+public class TicketEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private LocalDateTime arrivalTime;
-
-    private LocalDateTime departureTime;
-
     @ManyToOne
-    @JoinColumn(name="station_id", nullable=false)
-    private Station station;
+    @JoinColumn(name="passenger_id", nullable=false)
+    private PassengerEntity passenger;
 
     @ManyToOne
     @JoinColumn(name="train_id", nullable=false)
-    private Train train;
+    private TrainEntity train;
+
+    @NotNull
+    @Column(name = "departure_time")
+    private LocalDateTime departureTime;
 }

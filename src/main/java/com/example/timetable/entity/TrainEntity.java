@@ -6,24 +6,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Station {
+@Table(name = "train")
+public class TrainEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String name;
+    @NotNull
+    private String number;
 
-    @OneToMany(mappedBy = "station", cascade = CascadeType.ALL)
-    private List<TimeTableRelation> timeTable;
-
-    @ManyToMany(cascade = { CascadeType.REFRESH, CascadeType.MERGE })
-    private List<Train> trains;
+    @NotNull
+    @Column(name = "seat_amount")
+    private Integer seatAmount;
 }

@@ -1,74 +1,84 @@
 package com.example.timetable.service.ticket;
 
-import com.example.timetable.entity.Passenger;
-import com.example.timetable.entity.Ticket;
-import com.example.timetable.entity.TimeTableRelation;
-import com.example.timetable.entity.Train;
+import com.example.timetable.dto.BuyRequestDto;
+import com.example.timetable.entity.PassengerEntity;
+import com.example.timetable.entity.TicketEntity;
+import com.example.timetable.entity.TrainEntity;
+import com.example.timetable.error.CommonExceptionMessage;
+import com.example.timetable.error.ErrorCode;
+import com.example.timetable.error.exception.BusinessException;
 import com.example.timetable.repository.PassengerRepository;
 import com.example.timetable.repository.TicketRepository;
 import com.example.timetable.repository.TimeTableRepository;
-import com.example.timetable.service.train.TrainService;
+import com.example.timetable.repository.TrainRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
+    private final org.slf4j.Logger log = LoggerFactory.getLogger(TicketServiceImpl.class);
 
-    private final TrainService trainService;
-    private final TicketRepository ticketRepository;
     private final PassengerRepository passengerRepository;
+    private final TicketRepository ticketRepository;
+    private final TrainRepository trainRepository;
     private final TimeTableRepository timeTableRepository;
 
     @Override
-    public Ticket buyTicket(Ticket ticket, String stationName) {
-        Train train = trainService.findTrainByNumber(ticket.getTrain().getNumber());
-        List<Ticket> boughtTickets = ticketRepository.findAllByTrainNumber(train.getNumber());
+    public TicketEntity buyTicket(BuyRequestDto buyRequestDto) {
+        PassengerEntity passenger = passengerRepository.findById(buyRequestDto.getPassengerId())
+                .orElseThrow(() -> new BusinessException(CommonExceptionMessage.OBJECT_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND));
 
-        int seatAmount = train.getSeatAmount();
-        int boughtSeats = boughtTickets.size();
-        if (boughtSeats >= seatAmount)
-            throw new RuntimeException();
+        TrainEntity train = trainRepository.findById(buyRequestDto.getTrainId())
+                .orElseThrow(() -> new BusinessException(CommonExceptionMessage.OBJECT_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND));
 
-        Passenger passenger = ticket.getPassenger();
+        List<TicketEntity> boughtTickets = ticketRepository.findAllByTrainId(buyRequestDto.getTrainId());
 
-        boughtTickets.stream()
-                .map(t -> t.getPassenger())
-                .filter(p -> p.getFirstname().equalsIgnoreCase(passenger.getFirstname())
-                        && p.getLastname().equalsIgnoreCase(passenger.getLastname())
-                        && p.getBirthdate().isEqual(passenger.getBirthdate()))
-                .findAny()
-                .ifPresent(it -> {
-                    throw new RuntimeException();
-                });
+        checkPassengerAlreadyRegistered(boughtTickets, passenger);
 
-        LocalDateTime nowPlus10min = LocalDateTime.now().plus(Duration.of(10, ChronoUnit.MINUTES));
-        List<TimeTableRelation> timeTable = timeTableRepository.findAllByStationNameAndTrainNumber(stationName, train.getNumber());
+        checkTrainSeatsAmount(train, boughtTickets);
 
-        TimeTableRelation timeTableRelation = timeTable.stream()
-                .filter(it -> it.getDepartureTime().isBefore(nowPlus10min))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException());
+        checkDepartureTime(buyRequestDto);
 
-        Passenger passengerToSave = passengerRepository
-                .findByFirstnameAndLastnameAndBirthdate(passenger.getFirstname(), passenger.getLastname(), passenger.getBirthdate())
-                .orElse(passenger);
-
-        Ticket ticketToSave = Ticket.builder()
+        TicketEntity ticket = TicketEntity.builder()
+                .passenger(passenger)
                 .train(train)
-                .passenger(passengerToSave)
-                .departureTime(timeTableRelation.getDepartureTime())
+                .departureTime(buyRequestDto.getTime())
                 .build();
 
-        ticketRepository.save(ticketToSave);
+        log.info("Ticket to save: " + ticket);
+        return ticketRepository.save(ticket);
+    }
 
-        return ticket;
+    private void checkPassengerAlreadyRegistered(List<TicketEntity> boughtTickets, PassengerEntity passenger) {
+        boughtTickets.stream()
+                .map(TicketEntity::getPassenger)
+                .filter(p -> p.equals(passenger))
+                .findAny()
+                .ifPresent(it -> {
+                    throw new BusinessException(
+                            CommonExceptionMessage.PASSENGER_ALREADY_REGISTERED,
+                            ErrorCode.PASSENGER_ALREADY_REGISTERED);
+                });
+    }
+
+    private void checkTrainSeatsAmount(TrainEntity train, List<TicketEntity> boughtTickets) {
+        if (train.getSeatAmount() <= boughtTickets.size())
+            throw new BusinessException(CommonExceptionMessage.ALL_SEATS_BOUGHT, ErrorCode.ALL_SEATS_BOUGHT);
+    }
+
+    private void checkDepartureTime(BuyRequestDto buyRequestDto) {
+        timeTableRepository
+                .findAllByStationId(buyRequestDto.getStationId())
+                .stream().filter(it -> it.getDepartureTime().equals(buyRequestDto.getTime())
+                        && it.getDepartureTime().isAfter(LocalDateTime.now().plusMinutes(10)))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(CommonExceptionMessage.TRIP_NOT_FOUND, ErrorCode.TRIP_NOT_FOUND));
     }
 }

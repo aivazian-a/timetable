@@ -1,13 +1,15 @@
 package com.example.timetable.service.train;
 
-import com.example.timetable.entity.Train;
+import com.example.timetable.entity.TrainEntity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TrainService {
-    void saveTrain(Train train);
 
-    List<Train> getTrains();
+    TrainEntity saveTrain(TrainEntity train);
 
-    Train findTrainByNumber(String number);
+    List<TrainEntity> getTrains();
+
+    List<TrainEntity> findTrainsByTimeAndStation(Long fromStation, Long toStation, LocalDateTime fromDate, LocalDateTime toDate);
 }

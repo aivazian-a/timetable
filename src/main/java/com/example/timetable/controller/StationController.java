@@ -1,29 +1,26 @@
 package com.example.timetable.controller;
 
-import com.example.timetable.dto.StationDto;
-import com.example.timetable.entity.Station;
+import com.example.timetable.entity.StationEntity;
 import com.example.timetable.service.station.StationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/stations")
+@RequestMapping("/api/v1/stations")
 @RequiredArgsConstructor
 public class StationController {
     private final StationService stationService;
 
-    @PostMapping("/save")
-    public ResponseEntity saveStation(@RequestBody StationDto stationDto) {
-        stationService.saveStation(stationDto.toStation());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    @PostMapping
+    public StationEntity saveStation(@RequestBody @Valid StationEntity station) {
+        return stationService.saveStation(station);
     }
 
     @GetMapping
-    public List<Station> getStations() {
+    public List<StationEntity> getStations() {
         return stationService.getStations();
     }
 }

@@ -1,0 +1,66 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="passenger-table-creation" author="a-aivazian">
+        <sql>
+            CREATE TABLE IF NOT EXISTS passenger
+            (
+                id        SERIAL       NOT NULL,
+                firstname varchar(250) NOT NULL,
+                lastname  varchar(250) NOT NULL,
+                birthdate timestamp NOT NULL,
+                PRIMARY KEY (id)
+            )
+        </sql>
+    </changeSet>
+    <changeSet id="train-table-creation" author="a-aivazian">
+        <sql>
+            CREATE TABLE IF NOT EXISTS train
+            (
+                id        SERIAL       NOT NULL,
+                number varchar(250) NOT NULL,
+                seat_amount INTEGER NOT NULL,
+                PRIMARY KEY (id)
+            )
+        </sql>
+    </changeSet>
+    <changeSet id="station-table-creation" author="a-aivazian">
+        <sql>
+            CREATE TABLE IF NOT EXISTS station
+            (
+                id        SERIAL       NOT NULL,
+                name varchar(250) NOT NULL,
+                PRIMARY KEY (id)
+            )
+        </sql>
+    </changeSet>
+    <changeSet id="ticket-table-creation" author="a-aivazian">
+        <sql>
+            CREATE TABLE IF NOT EXISTS ticket
+            (
+                id        SERIAL       NOT NULL,
+                train_id integer REFERENCES train (id),
+                passenger_id integer REFERENCES passenger (id),
+                departure_time timestamptz NOT NULL,
+                PRIMARY KEY (id)
+            )
+        </sql>
+    </changeSet>
+    <changeSet id="timetable-table-creation" author="a-aivazian">
+        <sql>
+            CREATE TABLE IF NOT EXISTS time_table_relation
+            (
+                id        SERIAL       NOT NULL,
+                train_id integer REFERENCES train (id),
+                station_id integer REFERENCES station (id),
+                arrival_time timestamptz NOT NULL,
+                departure_time timestamptz NOT NULL,
+                PRIMARY KEY (id)
+            )
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

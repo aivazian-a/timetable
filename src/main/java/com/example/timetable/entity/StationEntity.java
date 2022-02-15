@@ -6,23 +6,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.time.LocalDate;
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Passenger {
+@Table(name = "station")
+public class StationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String firstname;
-
-    private String lastname;
-
-    private LocalDate birthdate;
+    @NotNull
+    private String name;
 }

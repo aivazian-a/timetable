@@ -1,13 +1,11 @@
 package com.example.timetable.service.station;
 
-import com.example.timetable.entity.Station;
+import com.example.timetable.entity.StationEntity;
 
 import java.util.List;
 
 public interface StationService {
-    void saveStation(Station station);
+    StationEntity saveStation(StationEntity station);
 
-    List<Station> getStations();
-
-    Station getStationByName(String name);
+    List<StationEntity> getStations();
 }
